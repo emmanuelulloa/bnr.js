@@ -47,7 +47,8 @@ var bnr = (function(){
 		      var map = {
 		        'loops': 	this._T.L,
 		        'duration': this._T.D,
-		        'timeline': this._T.M
+		        'timeline': this._T.M,
+		        'now': ((!this._T.N)?0:new Date().getTime() - this._T.N)
 		      };
 		      return map[val];
 		    }
@@ -64,9 +65,12 @@ var bnr = (function(){
 			if(fd){
 				this._T.F = fd;
 			}
+			if(!this._T.N){
+				this._T.N = new Date().getTime();
+			}
 			var me = this;
 			for(var i = 0; i < val.length; i++){
-				var f = val[i][1], ff = (val[i][0] < 100) ? val[i][0] * me._T.F : (!val[i][0])? me._T.F : val[i][0];
+				var f = val[i][1], ff = (val[i][0] < 10) ? val[i][0] * me._T.F : (!val[i][0])? me._T.F : val[i][0];
 				this._T.T.push(setTimeout(f, me._T.D += Math.abs(ff)));
 			}
 		}
@@ -80,3 +84,14 @@ var bnr = (function(){
   \__,_|_| |_|_|_| |_| |_|\__,_|\__|_|\___/|_| |_|
                                                   
 */
+var $banner = bnr.$('banner')[0];
+var $cta = bnr.$('cta')[0];
+var frameDuration = 3000;
+var tl = [
+	[0,function(){bnr.appendClass($banner,'scene1');}],
+	[,function(){bnr.appendClass($banner,'scene2');}],
+	[,function(){bnr.appendClass($banner,'scene3');}]
+
+];
+bnr.timeline(tl,frameDuration);
+bnr.on($banner,'click', function(){ window.open(window.clickTag); });
