@@ -10,7 +10,7 @@ var bnr = (function(){
 		return {
 		_D: {
 			html5 : 'querySelector' in document && 'addEventListener' in window,
-			ie : (navigator.userAgent.toLowerCase() != -1) ? parseInt(navigator.userAgent.toLowerCase().split('msie')[1]) : 0,
+			ie : (navigator.userAgent.toLowerCase() != -1) ? parseInt(navigator.userAgent.toLowerCase().split('msie')[1]) : 0;
 		},
 		detect : function(val){return this._D[val]},
 		ready: function(fn) {
@@ -40,15 +40,17 @@ var bnr = (function(){
 			L: 0,
 			T: [],
 			D: 0,
-			M: null
+			M: null,
+			O: []
 		},
 		timeline: function(val,fd){
 			if (typeof val === 'string') {
 		      var map = {
-		        'loops': 	this._T.L,
+		        'loops': this._T.L,
 		        'duration': this._T.D,
 		        'timeline': this._T.M,
-		        'now': ((!this._T.N)?0:new Date().getTime() - this._T.N)
+		        'now': ((!this._T.N)?0:new Date().getTime() - this._T.N),
+		        'restart': this(this._T.O)
 		      };
 		      return map[val];
 		    }
@@ -69,8 +71,9 @@ var bnr = (function(){
 				this._T.N = new Date().getTime();
 			}
 			var me = this;
+			this._T.O = val;
 			for(var i = 0; i < val.length; i++){
-				var f = val[i][1], ff = (val[i][0] < 10) ? val[i][0] * me._T.F : (!val[i][0])? me._T.F : val[i][0];
+				var f = val[i][1], ff = (val[i][0] < 100) ? val[i][0] * me._T.F : (!val[i][0])? me._T.F : val[i][0];
 				this._T.T.push(setTimeout(f, me._T.D += Math.abs(ff)));
 			}
 		}
