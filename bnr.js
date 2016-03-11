@@ -3,7 +3,7 @@ var bnr = (function(){
 		return {
 		_D: {
 			html5 : 'querySelector' in document && 'addEventListener' in window,
-			mobile : /Mobi/i.test(window.navigator.userAgent),
+			mobile : /Mobi/i.test(window.navigator.userAgent) || window.matchMedia("only screen and (max-width: 760px)").matches,
 			ie : (navigator.userAgent.toLowerCase() != -1) ? parseInt(navigator.userAgent.toLowerCase().split('msie')[1]) : 0
 		},
 		detect : function(val){return this._D[val]},
