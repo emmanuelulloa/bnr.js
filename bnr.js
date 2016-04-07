@@ -3,8 +3,9 @@ var bnr = (function(){
 		return {
 		_D: {
 			html5 : 'querySelector' in document && 'addEventListener' in window,
+			iOS : (navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPad/i)) || (navigator.userAgent.match(/iPod/i)),
 			mobile : /Mobi/i.test(window.navigator.userAgent) || window.matchMedia("only screen and (max-width: 760px)").matches,
-			ie : (navigator.userAgent.toLowerCase() != -1) ? parseInt(navigator.userAgent.toLowerCase().split('msie')[1]) : 0
+			ie : (navigator.userAgent.toLowerCase().indexOf("msie") != -1) ? parseInt(navigator.userAgent.toLowerCase().split('msie')[1]) : 0
 		},
 		detect : function(val){return this._D[val]},
 		ready: function(fn) {
@@ -17,7 +18,7 @@ var bnr = (function(){
 		$:function(S){
 			return document.getElementById(S) || document.getElementsByClassName(S) || document.getElementsByTagName(S) || document.querySelector(S) || document.querySelectorAll(S);
 		},
-		_PL: {img:{tag:'img',parent:'body',attr:{src:'@URL@'}},css:{tag:'link',parent:'head',attr:{'rel':'stylesheet', 'type':'text-css', 'href':'@URL@'}},js:{tag:'script',parent:'head',attr:{'type':'text/javascript','src':'@URL@'}}},
+		_PL: {img:{tag:'img',parent:'body',attr:{src:'@URL@'}},css:{tag:'link',parent:'head',attr:{'rel':'stylesheet', 'type':'text/css', 'href':'@URL@'}},js:{tag:'script',parent:'head',attr:{'type':'text/javascript','src':'@URL@'}}},
 		politeLoad : function(src, parent){
 			var p, e, xts = 'js css png gif jpg'.split(' ');
 			for(var i = 0; i < xts.length; i++){
