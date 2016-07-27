@@ -1,13 +1,38 @@
-/* bnr */
+/*
+  _                _     
+ | |__  _ __  _ __(_)___ 
+ | '_ \| '_ \| '__| / __|
+ | |_) | | | | |_ | \__ \
+ |_.__/|_| |_|_(_)/ |___/
+                |__/     
+*/
 var bnr = (function(){
-		return {
-		_D: {
-			html5 : 'querySelector' in document && 'addEventListener' in window,
-			iOS : (navigator.userAgent.match(/iPhone/i)) || (navigator.userAgent.match(/iPad/i)) || (navigator.userAgent.match(/iPod/i)),
-			mobile : /Mobi/i.test(window.navigator.userAgent) || window.matchMedia("only screen and (max-width: 760px)").matches,
-			ie : (navigator.userAgent.toLowerCase().indexOf("msie") != -1) ? parseInt(navigator.userAgent.toLowerCase().split('msie')[1]) : 0
+	"use strict";
+	return {
+		_io: function(s,i){
+			return s.indexOf(i);
 		},
-		detect : function(val){return this._D[val]},
+		detect : function(val){
+			var val = val.toLowerCase(),
+				_n = window.navigator.userAgent.toLowerCase(),
+				obj = {
+					touch : ('ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0),
+					html5 : 'querySelector' in document && 'addEventListener' in window,
+					ios : /ip(ad|od|hone)/.test(_n),
+					android : this._io(_n,'android') > -1,
+					mobile: /mobi/i.test(_n),
+					ie : (this._io(_n,'msie') != -1) ? parseInt(_n.split('msie')[1]) : 0,
+					edge : this._io(_n,'edge'),
+					orientation : (function(){
+						var r = 'landscape';
+						if(window.matchMedia){
+						 r = (window.matchMedia('(orientation: portrait)').matches)?'portrait':'landscape';
+						}
+						return r;
+					})()
+				};
+			return obj[val];
+		},
 		ready: function(fn) {
 			if (document.readyState === 'complete') {
 				return fn();
@@ -15,19 +40,61 @@ var bnr = (function(){
 			document.addEventListener('DOMContentLoaded', fn, false);
 			return this;
 		},
-		$:function(S){
-			return document.getElementById(S) || document.getElementsByClassName(S) || document.getElementsByTagName(S) || document.querySelector(S) || document.querySelectorAll(S);
+		$:function(S, i){
+			var r = document.getElementById(S) || document.getElementsByClassName(S) || document.getElementsByTagName(S) || document.querySelector(S) || document.querySelectorAll(S);
+			if(r.length && i != undefined){
+				return r[i];
+			}
+			return r;
 		},
-		_PL: {img:{tag:'img',parent:'body',attr:{src:'@URL@'}},css:{tag:'link',parent:'head',attr:{'rel':'stylesheet', 'type':'text/css', 'href':'@URL@'}},js:{tag:'script',parent:'head',attr:{'type':'text/javascript','src':'@URL@'}}},
-		politeLoad : function(src, parent){
-			var p, e, xts = 'js css png gif jpg'.split(' ');
+		_PL: {
+			img:{
+				tag:'img',
+				parent:'body',
+				attr:{
+					src:'@URL@'
+				}
+			},
+			css:{
+				tag:'link',
+				parent:'head',
+				attr:{
+					'rel':'stylesheet', 
+					'type':'text/css', 
+					'href':'@URL@'
+				}
+			},
+			js:{
+				tag:'script',
+				parent:'head',
+				attr:{
+					'type':'text/javascript',
+					'src':'@URL@'
+				}
+			},
+			svg:{
+				tag: 'object',
+				parent: 'body',
+				attr:{
+					'type':'image/svg+xml',
+					'data':'@URL@'
+				}
+			}
+		},
+		politeLoad : function(src, parent, fn){
+			var p, el, img = false, xts = 'js css png gif jpg svg'.split(' ');
 			for(var i = 0; i < xts.length; i++){
 				if(src.indexOf('.' + xts[i]) != -1){
 					switch(xts[i]){
 						case 'png':
 						case 'gif':
 						case 'jpg':
+						img = true;
 						p = this._PL.img;
+						break;
+						case 'svg':
+						img = true;
+						p = this._PL.svg;
 						break;
 						default:
 						p = this._PL[xts[i]];
@@ -37,19 +104,41 @@ var bnr = (function(){
 				}
 			}
 			el = document.createElement(p.tag);
+			if(fn){
+				el.onload = fn;
+			}
 			for(var prop in p.attr){
 				el.setAttribute(prop, p.attr[prop].replace('@URL@', src));
 			}
 			if(!parent){
+				if(img){
+					return el;
+				}
 				parent = document.getElementsByTagName(p.parent)[0];
 			}
-			parent.appendChild(el);
+			return parent.appendChild(el);
+		},
+		preload: function(images, fn){
+			var a = images.split(','), l = a.length, r = [];
+			for(var i = 0; i < l; i++){
+				r.push(this.politeLoad(a[i],null,fn));
+			}
+			return r;
 		},
 		resetElement: function(el){
 			el.parentNode.replaceChild(el.cloneNode(true),el);
 		},
-		appendClass: function(el, c){
-			el.className += ' ' + c;
+		addClass: function(el, c){
+			if (el.classList) el.classList.add(c);
+			else el.className += ' ' + c;
+			return this;
+		},
+		appendClass : function(el, c){
+			return this.addClass(el, c);
+		},
+		removeClass: function(el, c){
+			if (el.classList) el.classList.remove(c);
+			else el.className = el.className.replace(new RegExp('(^|\\b)' + c.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
 			return this;
 		},
 		setClass: function(el, c){
@@ -116,4 +205,11 @@ var bnr = (function(){
 		}
 	};
 })();
-/*BANNER CODE*/
+/*
+     _    _   _ ___ __  __    _  _____ ___ ___  _   _ 
+    / \  | \ | |_ _|  \/  |  / \|_   _|_ _/ _ \| \ | |
+   / _ \ |  \| || || |\/| | / _ \ | |  | | | | |  \| |
+  / ___ \| |\  || || |  | |/ ___ \| |  | | |_| | |\  |
+ /_/   \_\_| \_|___|_|  |_/_/   \_\_| |___\___/|_| \_|
+
+*/
