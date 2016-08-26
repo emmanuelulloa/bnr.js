@@ -125,35 +125,89 @@ var bnr = (function(){
 			}
 			return r;
 		},
-		resetElement: function(el){
+		getElement: function(el){
+			if(typeof el === 'string'){
+				return this.$(el, 0);
+			}
+			return el;
+		},
+		resetElement: function(elem){
+			var el = this.getElement(elem);
 			el.parentNode.replaceChild(el.cloneNode(true),el);
 		},
-		addClass: function(el, c){
+		addClass: function(elem, c){
+			var el = this.getElement(elem);
 			if (el.classList) el.classList.add(c);
 			else el.className += ' ' + c;
 			return this;
 		},
-		appendClass : function(el, c){
-			return this.addClass(el, c);
+		appendClass : function(elem, c){
+			return this.addClass(this.getElement(elem), c);
 		},
-		removeClass: function(el, c){
+		removeClass: function(elem, c){
+			var el = this.getElement(elem);
 			if (el.classList) el.classList.remove(c);
 			else el.className = el.className.replace(new RegExp('(^|\\b)' + c.split(' ').join('|') + '(\\b|$)', 'gi'), ' ');
 			return this;
 		},
-		setClass: function(el, c){
-			el.className = c;
+		setClass: function(elem, c){
+			this.getElement(elem).className = c;
+			return this;
+		},
+		hasClass: function(elem, c){
+			return new RegExp(' ' + c + ' ').test(' ' + this.getElement(elem).className + ' ');
+		},
+		toggleClass: function(elem, c){
+			var el = this.getElement(elem);
+			if(this.hasClass(el, c)){
+				this.removeClass(el, c);
+			}else{
+				this.addClass(el, c);
+			}
+			return this;
+		},
+		switchClass: function(elem, c1, c2){
+			var el = this.getElement(elem);
+			if(this.hasClass(el, c1)){
+				this.removeClass(el, c1);
+			}
+			this.addClass(el, c2);
 			return this;
 		},
 		wait: function(fn, d){
 			d = d || 1;
 			return setTimeout(fn, Math.round(d*1000));
 		},
-		on: function(el,evt,f){
+		onEnd: function(elem, name, fn, time){
+			var el = this.getElement(elem),
+			t = time || 500,
+			evtTran = el.style['transition'] !== undefined ? 'transitionend' : el.style['WebkitTransition'] !== undefined ? 'webkitTransitionEnd' : null,
+			evtAnim = el.style['animation'] !== undefined ? 'animationend' : el.style['WebkitAnimation'] !== undefined ? 'webkitAnimationEnd' : null,
+			fnTran = function(evt){
+				if(evt.propertyName == name){
+					fn(evt);
+				}
+			},
+			fnAnim = function(evt){
+				if(evt.animationName == name){
+					fn(evt);
+				}
+			};
+			if(evtTran == null && evtAnim == null){
+				this.wait(fn, t * 1000);
+			}else{
+				this.on(el, evtTran, fnTran);
+				this.on(el, evtAnim, fn);
+			}
+			return this;
+		},
+		on: function(elem,evt,f){
+			var el = this.getElement(elem);
 			el.addEventListener(evt,f,false);
 			return this;
 		},
-		off: function(el,evt,f){
+		off: function(elem,evt,f){
+			var el = this.getElement(elem);
 			el.removeEventListener(evt,f,false);
 			return this;
 		},
@@ -163,7 +217,48 @@ var bnr = (function(){
 			T: [],
 			D: 0,
 			M: null,
-			O: []
+			O: [],
+			TKR: (function(){
+				var raf = null, caf = null, cncl = 'cancel' + 'AnimationFrame', req = 'request' + 'AnimationFrame';
+				if(!window[req]){
+					req = 'Request' + 'AnimationFrame';
+					cncl = 'Cancel' + 'AnimationFrame';
+					raf = window['webkit' + req] || window['moz' + req] || window['ms' + req] || window['o' + req] || function(callback){ return window.setTimeout(callback,16);};
+					caf = window['webkit' + cncl] || window['moz' + cncl] || window['ms' + cncl] || window['o' + cncl] || window.clearTimeout;
+				}else{
+					raf = window[req];
+					caf = window[cncl];
+				}
+				return {RAF: raf, CAF: caf};
+			})()
+		},
+		clearDelay : function(obj){
+			this._T.TKR.CAF(obj.id);
+			return this;
+		},
+		delay : function(fn, d){
+			var obj = {
+				id : 0,
+				_fn : fn,
+				_f : Math.round(d / 16.666),
+				_raf : this._T.TKR.RAF,
+				getId : function(){
+					var o = this;
+					return this._raf.call(window, function(){
+						o.tick();
+					});
+				},
+				tick : function(){
+					if(this._f){
+						--this._f;
+						this.id = this.getId();
+					}else{
+						this._fn();
+					}
+				}
+			};
+			obj.id = obj.getId();
+			return obj;
 		},
 		timeline: function(val,fd){
 			if(fd){
@@ -182,7 +277,7 @@ var bnr = (function(){
 		      }
 		      if(val === 'halt'){
 			    for (var i = 0; i < this._T.T.length; i++) {
-			      clearTimeout(this._T.T[i]);
+			      this.clearDelay(this._T.T[i]);
 			    }
 			    return false;
 		      }
@@ -199,7 +294,7 @@ var bnr = (function(){
 			var me = this;
 			for(var i = 0; i < val.length; i++){
 				var f = val[i][1], ff = (val[i][0] < 100) ? val[i][0] * me._T.F : (!val[i][0])? me._T.F : val[i][0];
-				this._T.T.push(setTimeout(f, me._T.D += Math.abs(ff)));
+				this._T.T.push(this.delay(f, me._T.D += Math.abs(ff)));
 			}
 			return this;
 		}
