@@ -179,11 +179,11 @@ var bnr = (function(){
 			d = d || 1;
 			return setTimeout(fn, Math.round(d*1000));
 		},
-		onEnd: function(elem, name, fn, time){
+		onComplete: function(elem, name, fn, time){
 			var el = this.getElement(elem),
 			t = time || 500,
-			evtTran = el.style['transition'] !== undefined ? 'transitionend' : el.style['WebkitTransition'] !== undefined ? 'webkitTransitionEnd' : null,
-			evtAnim = el.style['animation'] !== undefined ? 'animationend' : el.style['WebkitAnimation'] !== undefined ? 'webkitAnimationEnd' : null,
+			evtTran = el.style['transition'] !== undefined ? 'transitionend' : el.style['WebkitTransition'] !== undefined ? 'webkitTransitionComplete' : null,
+			evtAnim = el.style['animation'] !== undefined ? 'animationend' : el.style['WebkitAnimation'] !== undefined ? 'webkitAnimationComplete' : null,
 			fnTran = function(evt){
 				if(evt.propertyName == name){
 					fn(evt);
