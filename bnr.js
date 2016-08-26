@@ -23,6 +23,7 @@ var bnr = (function(){
 					mobile: /mobi/i.test(_n),
 					ie : (this._io(_n,'msie') != -1) ? parseInt(_n.split('msie')[1]) : 0,
 					edge : this._io(_n,'edge'),
+					svg : (document.createElementNS && document.createElementNS('http://www.w3.org/2000/svg', 'svg').createSVGRect),
 					orientation : (function(){
 						var r = 'landscape';
 						if(window.matchMedia){
@@ -131,6 +132,17 @@ var bnr = (function(){
 			}
 			return el;
 		},
+		getTime: function(t){
+			if(typeof t === 'string'){
+				if(t.indexOf('ms') != -1){
+					return parseInt(t);
+				}else if(t.indexOf('s') != -1){
+					return Math.round(parseFloat(t) * 1000);
+				}
+				return parseInt(t);
+			}
+			return t;
+		},
 		resetElement: function(elem){
 			var el = this.getElement(elem);
 			el.parentNode.replaceChild(el.cloneNode(true),el);
@@ -219,6 +231,7 @@ var bnr = (function(){
 			D: 0,
 			M: null,
 			O: [],
+			P: true,
 			TKR: (function(){
 				var raf = null, caf = null, cncl = 'cancel' + 'AnimationFrame', req = 'request' + 'AnimationFrame';
 				if(!window[req]){
@@ -233,6 +246,9 @@ var bnr = (function(){
 				return {RAF: raf, CAF: caf};
 			})()
 		},
+		_ip: function(){
+			return this._T.P;
+		},
 		clearDelay : function(obj){
 			this._T.TKR.CAF(obj.id);
 			return this;
@@ -243,6 +259,7 @@ var bnr = (function(){
 				_fn : fn,
 				_f : Math.round(d / 16.666),
 				_raf : this._T.TKR.RAF,
+				_ip : this._ip,
 				getId : function(){
 					var o = this;
 					return this._raf.call(window, function(){
@@ -250,11 +267,13 @@ var bnr = (function(){
 					});
 				},
 				tick : function(){
-					if(this._f){
-						--this._f;
-						this.id = this.getId();
-					}else{
-						this._fn();
+					if(this._ip()){
+						if(this._f){
+							--this._f;
+							this.id = this.getId();
+						}else{
+							this._fn();
+						}						
 					}
 				}
 			};
@@ -263,7 +282,7 @@ var bnr = (function(){
 		},
 		timeline: function(val,fd){
 			if(fd){
-				this._T.F = fd;
+				this._T.F = this.getTime(fd);
 			}
 			if (typeof val === 'string') {
 		      var map = {
@@ -275,12 +294,20 @@ var bnr = (function(){
 		      if(val === 'restart'){
 		      	this.timeline(this._T.O, this._T.F);
 		      	return true;
-		      }
-		      if(val === 'halt'){
+		      }else if(val === 'halt'){
 			    for (var i = 0; i < this._T.T.length; i++) {
 			      this.clearDelay(this._T.T[i]);
 			    }
 			    return false;
+		      }else if(val === 'play'){
+		      	this._T.P = true;
+		      	return true;
+		      }else if(val === 'stop'){
+		      	this._T.P = false;
+		      	return false;
+		      }else if(val === 'pause'){
+		      	this._T.P = !this._T.P;
+		      	return this._T.P;
 		      }
 		      return map[val];
 		    }
@@ -294,7 +321,7 @@ var bnr = (function(){
 			this._T.O = val;
 			var me = this;
 			for(var i = 0; i < val.length; i++){
-				var f = val[i][1], ff = (val[i][0] < 100) ? val[i][0] * me._T.F : (!val[i][0])? me._T.F : val[i][0];
+				var dur = val[i][0], time = this.getTime(dur), f = val[i][1], ff = (time < 100) ? time * me._T.F : (!dur)? me._T.F : time;
 				this._T.T.push(this.delay(f, me._T.D += Math.abs(ff)));
 			}
 			return this;
