@@ -134,6 +134,7 @@ var bnr = (function(){
 		resetElement: function(elem){
 			var el = this.getElement(elem);
 			el.parentNode.replaceChild(el.cloneNode(true),el);
+			return this;
 		},
 		addClass: function(elem, c){
 			var el = this.getElement(elem);
@@ -194,7 +195,7 @@ var bnr = (function(){
 				}
 			};
 			if(evtTran == null && evtAnim == null){
-				this.wait(fn, t * 1000);
+				this.wait(fn, t / 1000);
 			}else{
 				this.on(el, evtTran, fnTran);
 				this.on(el, evtAnim, fn);
