@@ -246,11 +246,8 @@ var bnr = (function(){
 				return {RAF: raf, CAF: caf};
 			})()
 		},
-		_ip: function(){
-			return this._T.P;
-		},
 		clearDelay : function(obj){
-			this._T.TKR.CAF(obj.id);
+			this._T.TKR.CAF.call(window, obj.id);
 			return this;
 		},
 		delay : function(fn, d){
@@ -259,7 +256,11 @@ var bnr = (function(){
 				_fn : fn,
 				_f : Math.round(d / 16.666),
 				_raf : this._T.TKR.RAF,
-				_ip : this._ip,
+				_ip : (function(s){
+					return function(){
+						return s._T.P;
+					}
+				})(this),
 				getId : function(){
 					var o = this;
 					return this._raf.call(window, function(){
@@ -285,6 +286,7 @@ var bnr = (function(){
 				this._T.F = this.getTime(fd);
 			}
 			if (typeof val === 'string') {
+			  val = val.toLowerCase();
 		      var map = {
 		        'loops': this._T.L,
 		        'duration': this._T.D,
